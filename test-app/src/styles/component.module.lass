@@ -1,0 +1,31 @@
+const spacing = {
+  sm: '0.5rem',
+  md: '1rem',
+  lg: '1.5rem',
+};
+
+const radius = '8px';
+---
+
+.container {
+  background: var(--color-surface);
+  padding: {{ spacing.lg }};
+  border-radius: {{ radius }};
+  margin: {{ spacing.md }} 0;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  margin-bottom: {{ spacing.md }};
+}
+
+.status {
+  display: inline-block;
+  padding: {{ spacing.sm }} {{ spacing.md }};
+  background: var(--color-secondary);
+  color: white;
+  border-radius: {{ radius }};
+  font-size: 0.875rem;
+}

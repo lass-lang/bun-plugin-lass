@@ -18,16 +18,14 @@
 
 import type { BunPlugin } from 'bun';
 import { plugin } from 'bun';
-import { dirname } from 'node:path';
+import { dirname, resolve, isAbsolute } from 'node:path';
+import { transpile } from '@lass-lang/core';
 import {
-  transpile,
   rewriteImportsForExecution,
-  extractStyle,
+  injectStyle,
   toVirtualCssPath,
   fromVirtualCssPath,
-  isVirtualModuleCssPath,
-  LASS_EXT,
-} from '@lass-lang/core';
+} from './lib/plugin-utils.js';
 import type { LassPluginOptions } from './lib/types.js';
 
 export type { LassPluginOptions } from './lib/types.js';
@@ -40,6 +38,18 @@ const LASS_MODULE_RE = /\.module\.lass$/;
 
 /** Namespace for CSS Modules virtual paths */
 const LASS_MODULE_NS = 'lass-module';
+
+/**
+ * Resolve a path relative to an importer without triggering Bun.resolveSync
+ * (which would cause infinite recursion in onResolve).
+ */
+function resolvePath(specifier: string, importer: string | undefined): string {
+  if (isAbsolute(specifier)) {
+    return specifier;
+  }
+  const base = importer ? dirname(importer) : process.cwd();
+  return resolve(base, specifier);
+}
 
 /**
  * Creates a Bun plugin for processing .lass files.
@@ -69,10 +79,9 @@ export function lass(options: LassPluginOptions = {}): BunPlugin {
       // CSS Modules: Resolve .module.lass to virtual .lass.module.css path
       // ========================================================================
       build.onResolve({ filter: LASS_MODULE_RE }, ({ path, importer }) => {
-        // Resolve the actual file path
-        const resolved = importer
-          ? Bun.resolveSync(path, dirname(importer))
-          : Bun.resolveSync(path, process.cwd());
+        // Resolve the actual file path using simple path resolution
+        // (avoid Bun.resolveSync which would trigger this hook again)
+        const resolved = resolvePath(path, importer);
 
         // Convert to virtual CSS Modules path using shared convention
         const virtualPath = toVirtualCssPath(resolved);
@@ -102,7 +111,7 @@ export function lass(options: LassPluginOptions = {}): BunPlugin {
           const source = await Bun.file(actualPath).text();
           const { code: transpiled } = transpile(source, { filename: actualPath });
           const executableCode = rewriteImportsForExecution(transpiled, dirname(actualPath));
-          const css = await extractStyle(executableCode);
+          const css = await injectStyle(executableCode);
 
           return {
             contents: css,
@@ -131,7 +140,7 @@ export function lass(options: LassPluginOptions = {}): BunPlugin {
           const source = await Bun.file(path).text();
           const { code: transpiled } = transpile(source, { filename: path });
           const executableCode = rewriteImportsForExecution(transpiled, dirname(path));
-          const css = await extractStyle(executableCode);
+          const css = await injectStyle(executableCode);
 
           return {
             contents: css,

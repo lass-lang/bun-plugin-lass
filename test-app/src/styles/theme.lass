@@ -1,0 +1,36 @@
+const colors = {
+  primary: '#3b82f6',
+  secondary: '#10b981',
+  background: '#1e1e2e',
+  surface: '#2a2a3e',
+  text: '#e4e4e7',
+  textMuted: '#a1a1aa',
+};
+---
+
+:root {
+  --color-primary: {{ colors.primary }};
+  --color-secondary: {{ colors.secondary }};
+  --color-background: {{ colors.background }};
+  --color-surface: {{ colors.surface }};
+  --color-text: {{ colors.text }};
+  --color-text-muted: {{ colors.textMuted }};
+}
+
+body {
+  font-family: system-ui, -apple-system, sans-serif;
+  background: var(--color-background);
+  color: var(--color-text);
+  margin: 0;
+  padding: 2rem;
+  line-height: 1.6;
+}
+
+h1 {
+  color: var(--color-primary);
+  margin-bottom: 1rem;
+}
+
+p {
+  color: var(--color-text-muted);
+}

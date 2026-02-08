@@ -1,0 +1,14 @@
+{
+  "name": "@lass-lang/bun-plugin-lass-test-app",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "bun run build.ts && bun --hot dist/server.js",
+    "build": "bun run build.ts"
+  },
+  "devDependencies": {
+    "@lass-lang/bun-plugin-lass": "workspace:^",
+    "bun-types": "latest"
+  }
+}

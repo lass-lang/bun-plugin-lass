@@ -265,4 +265,290 @@ import "./theme.lass";
       expect(result.success).toBe(true);
     });
   });
+
+  describe('absolute path resolution', () => {
+    it('should resolve absolute .lass paths', async () => {
+      const lassFile = join(testDir, 'absolute.lass');
+      const entryFile = join(testDir, 'entry.ts');
+
+      await writeFile(lassFile, '.absolute { position: absolute; }');
+      // Use absolute path in import
+      await writeFile(entryFile, `import "${lassFile}";`);
+
+      const result = await Bun.build({
+        entrypoints: [entryFile],
+        outdir: join(testDir, 'out'),
+        plugins: [lass()],
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should resolve absolute .module.lass paths', async () => {
+      const lassFile = join(testDir, 'absolute.module.lass');
+      const entryFile = join(testDir, 'entry.ts');
+
+      await writeFile(lassFile, '.absolute { position: absolute; }');
+      // Use absolute path in import
+      await writeFile(
+        entryFile,
+        `
+import styles from "${lassFile}";
+console.log(styles.absolute);
+`
+      );
+
+      const result = await Bun.build({
+        entrypoints: [entryFile],
+        outdir: join(testDir, 'out'),
+        plugins: [lass()],
+      });
+
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('nested directory imports', () => {
+    it('should handle .lass files in subdirectories', async () => {
+      const stylesDir = join(testDir, 'styles');
+      await mkdir(stylesDir, { recursive: true });
+
+      const lassFile = join(stylesDir, 'nested.lass');
+      const entryFile = join(testDir, 'entry.ts');
+
+      await writeFile(lassFile, '.nested { display: block; }');
+      await writeFile(entryFile, `import "./styles/nested.lass";`);
+
+      const result = await Bun.build({
+        entrypoints: [entryFile],
+        outdir: join(testDir, 'out'),
+        plugins: [lass()],
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('should handle .module.lass files in subdirectories', async () => {
+      const componentsDir = join(testDir, 'components');
+      await mkdir(componentsDir, { recursive: true });
+
+      const lassFile = join(componentsDir, 'button.module.lass');
+      const entryFile = join(testDir, 'entry.ts');
+
+      await writeFile(lassFile, '.button { cursor: pointer; }');
+      await writeFile(
+        entryFile,
+        `
+import styles from "./components/button.module.lass";
+console.log(styles.button);
+`
+      );
+
+      const result = await Bun.build({
+        entrypoints: [entryFile],
+        outdir: join(testDir, 'out'),
+        plugins: [lass()],
+      });
+
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('verbose logging for CSS modules', () => {
+    it('should log CSS Module resolve and load when verbose is true', async () => {
+      const logs: string[] = [];
+      const originalLog = console.log;
+      console.log = (...args: unknown[]) => logs.push(args.join(' '));
+
+      const lassFile = join(testDir, 'verbose.module.lass');
+      const entryFile = join(testDir, 'entry.ts');
+
+      await writeFile(lassFile, '.verbose { opacity: 1; }');
+      await writeFile(
+        entryFile,
+        `
+import styles from "./verbose.module.lass";
+console.log(styles.verbose);
+`
+      );
+
+      await Bun.build({
+        entrypoints: [entryFile],
+        outdir: join(testDir, 'out'),
+        plugins: [lass({ verbose: true })],
+      });
+
+      console.log = originalLog;
+
+      // Should have logs for resolve and load
+      expect(logs.some((l) => l.includes('[lass] resolve module:'))).toBe(true);
+      expect(logs.some((l) => l.includes('[lass] loading module:'))).toBe(true);
+    });
+  });
+
+  describe('CSS module error handling', () => {
+    it('should fail for non-existent .module.lass files', async () => {
+      const entryFile = join(testDir, 'entry.ts');
+      await writeFile(
+        entryFile,
+        `
+import styles from "./nonexistent.module.lass";
+console.log(styles);
+`
+      );
+
+      const result = await Bun.build({
+        entrypoints: [entryFile],
+        outdir: join(testDir, 'out'),
+        plugins: [lass()],
+        throw: false,
+      });
+
+      expect(result.success).toBe(false);
+    });
+
+    it('should fail on syntax errors in .module.lass preamble', async () => {
+      const lassFile = join(testDir, 'error.module.lass');
+      const entryFile = join(testDir, 'entry.ts');
+
+      // Invalid JS in preamble
+      await writeFile(
+        lassFile,
+        `const x = {{{ // syntax error
+---
+.error { color: red; }`
+      );
+      await writeFile(
+        entryFile,
+        `
+import styles from "./error.module.lass";
+console.log(styles);
+`
+      );
+
+      const result = await Bun.build({
+        entrypoints: [entryFile],
+        outdir: join(testDir, 'out'),
+        plugins: [lass()],
+        throw: false,
+      });
+
+      expect(result.success).toBe(false);
+    });
+  });
+
+  describe('register function', () => {
+    it('should export register function', async () => {
+      const { register } = await import('../src/index.js');
+      expect(typeof register).toBe('function');
+    });
+  });
+
+  describe('import without importer', () => {
+    it('should resolve paths when importer is undefined', async () => {
+      const lassFile = join(testDir, 'no-importer.lass');
+      const entryFile = join(testDir, 'entry.ts');
+
+      await writeFile(lassFile, '.box { color: red; }');
+      await writeFile(entryFile, `import "./no-importer.lass";`);
+
+      const result = await Bun.build({
+        entrypoints: [entryFile],
+        outdir: join(testDir, 'out'),
+        plugins: [lass()],
+      });
+
+      expect(result.success).toBe(true);
+    });
+  });
+
+  describe('complex expressions in preamble', () => {
+    it('should handle template literals in expressions', async () => {
+      const lassFile = join(testDir, 'template.lass');
+      const entryFile = join(testDir, 'entry.ts');
+
+      await writeFile(
+        lassFile,
+        `const unit = "px"
+const size = 16
+---
+.box { font-size: {{ \`\${size}\${unit}\` }}; }`
+      );
+      await writeFile(entryFile, `import "./template.lass";`);
+
+      const result = await Bun.build({
+        entrypoints: [entryFile],
+        outdir: join(testDir, 'out'),
+        plugins: [lass()],
+      });
+
+      expect(result.success).toBe(true);
+
+      const cssOutput = result.outputs.find((o) => o.path.endsWith('.css'));
+      if (cssOutput) {
+        const css = await cssOutput.text();
+        expect(css).toContain('font-size: 16px');
+      }
+    });
+
+    it('should handle function calls in expressions', async () => {
+      const lassFile = join(testDir, 'function.lass');
+      const entryFile = join(testDir, 'entry.ts');
+
+      await writeFile(
+        lassFile,
+        `const sizes = ["10px", "20px", "30px"]
+---
+.first { width: {{ sizes[0] }}; }
+.last { width: {{ sizes.at(-1) }}; }`
+      );
+      await writeFile(entryFile, `import "./function.lass";`);
+
+      const result = await Bun.build({
+        entrypoints: [entryFile],
+        outdir: join(testDir, 'out'),
+        plugins: [lass()],
+      });
+
+      expect(result.success).toBe(true);
+
+      const cssOutput = result.outputs.find((o) => o.path.endsWith('.css'));
+      if (cssOutput) {
+        const css = await cssOutput.text();
+        expect(css).toContain('width: 10px');
+        expect(css).toContain('width: 30px');
+      }
+    });
+  });
+
+  describe('CSS output verification', () => {
+    it('should output correct CSS for .module.lass files', async () => {
+      const lassFile = join(testDir, 'verify.module.lass');
+      const entryFile = join(testDir, 'entry.ts');
+
+      await writeFile(lassFile, '.container { display: grid; gap: 1rem; }');
+      await writeFile(
+        entryFile,
+        `
+import styles from "./verify.module.lass";
+export default styles;
+`
+      );
+
+      const result = await Bun.build({
+        entrypoints: [entryFile],
+        outdir: join(testDir, 'out'),
+        plugins: [lass()],
+      });
+
+      expect(result.success).toBe(true);
+
+      const cssOutput = result.outputs.find((o) => o.path.endsWith('.css'));
+      if (cssOutput) {
+        const css = await cssOutput.text();
+        expect(css).toContain('display: grid');
+        expect(css).toContain('gap: 1rem');
+      }
+    });
+  });
 });

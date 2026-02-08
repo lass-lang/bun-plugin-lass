@@ -1,0 +1,63 @@
+{
+  "name": "@lass-lang/bun-plugin-lass",
+  "version": "0.0.1",
+  "description": "Bun plugin for Lass language",
+  "author": "Long-lazuli",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./preload": {
+      "types": "./dist/preload.d.ts",
+      "import": "./dist/preload.js"
+    }
+  },
+  "files": [
+    "dist",
+    "CHANGELOG.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "test": "bun test",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "bun run build && changeset publish"
+  },
+  "dependencies": {
+    "@lass-lang/core": "^0.0.1"
+  },
+  "peerDependencies": {
+    "bun": ">=1.0.0"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.8",
+    "@types/bun": "latest",
+    "typescript": "^5.7.0"
+  },
+  "keywords": [
+    "lass",
+    "bun",
+    "bun-plugin",
+    "css",
+    "preprocessor",
+    "styling",
+    "css-modules"
+  ],
+  "engines": {
+    "bun": ">=1.0.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lass-lang/bun-plugin-lass.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lass-lang/bun-plugin-lass/issues"
+  },
+  "homepage": "https://github.com/lass-lang/bun-plugin-lass#readme"
+}

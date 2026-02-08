@@ -29,7 +29,8 @@
     "release": "bun run build && changeset publish"
   },
   "dependencies": {
-    "@lass-lang/core": "^0.0.1"
+    "@lass-lang/core": "^0.0.1",
+    "@lass-lang/plugin-utils": "^0.0.1"
   },
   "peerDependencies": {
     "bun": ">=1.0.0"

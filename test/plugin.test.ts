@@ -551,4 +551,70 @@ export default styles;
       }
     });
   });
+
+  describe('TypeScript mode configuration', () => {
+    it('defaults to TypeScript mode (useJS: false)', async () => {
+      const lassFile = join(testDir, 'default.lass');
+      const entryFile = join(testDir, 'entry.ts');
+
+      await writeFile(lassFile, '.test { color: blue; }');
+      await writeFile(entryFile, `import "./default.lass";`);
+
+      const result = await Bun.build({
+        entrypoints: [entryFile],
+        outdir: join(testDir, 'out'),
+        plugins: [lass()], // No options = TypeScript mode
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts useJS: true for JavaScript mode', async () => {
+      const lassFile = join(testDir, 'js-mode.lass');
+      const entryFile = join(testDir, 'entry.ts');
+
+      await writeFile(lassFile, '.test { color: green; }');
+      await writeFile(entryFile, `import "./js-mode.lass";`);
+
+      const result = await Bun.build({
+        entrypoints: [entryFile],
+        outdir: join(testDir, 'out'),
+        plugins: [lass({ useJS: true })],
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts useJS: false for explicit TypeScript mode', async () => {
+      const lassFile = join(testDir, 'ts-mode.lass');
+      const entryFile = join(testDir, 'entry.ts');
+
+      await writeFile(lassFile, '.test { color: red; }');
+      await writeFile(entryFile, `import "./ts-mode.lass";`);
+
+      const result = await Bun.build({
+        entrypoints: [entryFile],
+        outdir: join(testDir, 'out'),
+        plugins: [lass({ useJS: false })],
+      });
+
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts verbose option alongside useJS option', async () => {
+      const lassFile = join(testDir, 'combined.lass');
+      const entryFile = join(testDir, 'entry.ts');
+
+      await writeFile(lassFile, '.test { color: purple; }');
+      await writeFile(entryFile, `import "./combined.lass";`);
+
+      const result = await Bun.build({
+        entrypoints: [entryFile],
+        outdir: join(testDir, 'out'),
+        plugins: [lass({ verbose: true, useJS: true })],
+      });
+
+      expect(result.success).toBe(true);
+    });
+  });
 });

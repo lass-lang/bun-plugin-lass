@@ -20,6 +20,7 @@ import type { BunPlugin } from 'bun';
 import { plugin } from 'bun';
 import { dirname, resolve, isAbsolute } from 'node:path';
 import { transpile } from '@lass-lang/core';
+import { detectTsconfig } from '@lass-lang/plugin-utils';
 import {
   rewriteImportsForExecution,
   injectStyle,
@@ -54,6 +55,9 @@ function resolvePath(specifier: string, importer: string | undefined): string {
 /**
  * Creates a Bun plugin for processing .lass files.
  *
+ * TypeScript is the first-class citizen for Script Preambles (default behavior).
+ * Use `useJS: true` to explicitly opt into JavaScript mode.
+ *
  * @param options - Plugin configuration options
  * @returns Bun plugin
  *
@@ -69,7 +73,22 @@ function resolvePath(specifier: string, importer: string | undefined): string {
  * ```
  */
 export function lass(options: LassPluginOptions = {}): BunPlugin {
-  const { verbose = false } = options;
+  const { verbose = false, useJS = false } = options;
+
+  // TypeScript mode is the default (first-class citizen)
+  // NOTE: useTypeScript/hasTsconfig are architecture preparation — the transpiler core
+  // does not yet differentiate TS vs JS. These flags will be wired to downstream
+  // transforms when the core adds TypeScript support. For now they are logged only.
+  // Bun limitation: detectTsconfig uses process.cwd() since Bun's plugin API
+  // does not expose a resolved project root. This is correct when build is invoked
+  // from the project directory (the common case).
+  const useTypeScript = !useJS;
+  const hasTsconfig = useTypeScript && detectTsconfig();
+
+  if (verbose) {
+    console.log(`[bun-plugin-lass] TypeScript mode: ${useTypeScript}`);
+    console.log(`[bun-plugin-lass] Type-checking: ${hasTsconfig}`);
+  }
 
   return {
     name: 'bun-plugin-lass',

@@ -57,7 +57,8 @@ describe('bun-plugin-lass', () => {
 
       await writeFile(
         lassFile,
-        `const color = "red"
+        `---
+const color = "red"
 ---
 .box { color: {{ color }}; }`
       );
@@ -87,7 +88,8 @@ describe('bun-plugin-lass', () => {
       await writeFile(tokensFile, '{ "primary": "#3b82f6" }');
       await writeFile(
         lassFile,
-        `import tokens from './tokens.json' with { type: 'json' }
+        `---
+import tokens from './tokens.json' with { type: 'json' }
 ---
 .btn { background: {{ tokens.primary }}; }`
       );
@@ -108,7 +110,8 @@ describe('bun-plugin-lass', () => {
 
       await writeFile(
         lassFile,
-        `const base = 8
+        `---
+const base = 8
 ---
 .box { padding: {{ base * 2 }}px; }`
       );
@@ -153,7 +156,8 @@ console.log(styles.container);
 
       await writeFile(
         lassFile,
-        `const color = "green"
+        `---
+const color = "green"
 ---
 .button { background: {{ color }}; }`
       );
@@ -198,7 +202,8 @@ export default styles;
       // Create a file with invalid JS in preamble
       await writeFile(
         lassFile,
-        `const x = {{{ // invalid syntax
+        `---
+const x = {{{ // invalid syntax
 ---
 .box { color: red; }`
       );
@@ -414,7 +419,8 @@ console.log(styles);
       // Invalid JS in preamble
       await writeFile(
         lassFile,
-        `const x = {{{ // syntax error
+        `---
+const x = {{{ // syntax error
 ---
 .error { color: red; }`
       );
@@ -469,7 +475,8 @@ console.log(styles);
 
       await writeFile(
         lassFile,
-        `const unit = "px"
+        `---
+const unit = "px"
 const size = 16
 ---
 .box { font-size: {{ \`\${size}\${unit}\` }}; }`
@@ -497,7 +504,8 @@ const size = 16
 
       await writeFile(
         lassFile,
-        `const sizes = ["10px", "20px", "30px"]
+        `---
+const sizes = ["10px", "20px", "30px"]
 ---
 .first { width: {{ sizes[0] }}; }
 .last { width: {{ sizes.at(-1) }}; }`

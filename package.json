@@ -1,6 +1,6 @@
 {
   "name": "@lass-lang/bun-plugin-lass",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Bun plugin for Lass language",
   "author": "Long-lazuli",
   "type": "module",
@@ -31,8 +31,8 @@
     "release": "bun run build && changeset publish"
   },
   "dependencies": {
-    "@lass-lang/core": "^0.0.1",
-    "@lass-lang/plugin-utils": "^0.0.1"
+    "@lass-lang/core": "^0.1.0",
+    "@lass-lang/plugin-utils": "^0.1.0"
   },
   "peerDependencies": {
     "bun": ">=1.0.0"
